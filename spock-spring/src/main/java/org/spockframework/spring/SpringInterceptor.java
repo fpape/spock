@@ -18,7 +18,17 @@ package org.spockframework.spring;
 
 import org.spockframework.runtime.extension.*;
 import org.spockframework.runtime.model.ErrorInfo;
+import org.spockframework.runtime.model.FieldInfo;
+import org.spockframework.runtime.model.SpecInfo;
 import org.spockframework.util.NotThreadSafe;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.context.support.StaticApplicationContext;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @NotThreadSafe
 public class SpringInterceptor extends AbstractMethodInterceptor {
@@ -26,16 +36,57 @@ public class SpringInterceptor extends AbstractMethodInterceptor {
 
   private Throwable exception;
   private boolean beforeTestMethodInvoked = false;
+    private List<FieldInfo> springMockFields = new ArrayList<FieldInfo>();
+    private Map<String, Object> indexedDelegatingBeans = new HashMap<String, Object>();
 
-  public SpringInterceptor(SpringTestContextManager manager) {
-    this.manager = manager;
-  }
+    public SpringInterceptor(SpringTestContextManager manager) {
+      this.manager = manager;
+    }
 
   @Override
   public void interceptSetupSpecMethod(IMethodInvocation invocation) throws Throwable {
+      loadSpringMocks(invocation.getSpec());
+      manager.registerParentApplicationContext(createParentContext());
     manager.beforeTestClass();
     invocation.proceed();
   }
+
+    private void loadSpringMocks(SpecInfo spec) {
+        springMockFields.clear();
+        for (FieldInfo field : spec.getAllFields()) {
+            if (field.getReflection().isAnnotationPresent(SpringMock.class)) {
+                springMockFields.add(field);
+            }
+        }
+    }
+
+    private ApplicationContext createParentContext() {
+        GenericApplicationContext parentContext = new StaticApplicationContext();
+        for (FieldInfo springMockField : springMockFields) {
+            String beanName = determineBeanName(springMockField);
+            Object delegatingBean = createDelegatingBean(springMockField);
+//            parentContext.getBeanFactory().registerSingleton(beanName, delegatingBean);
+            indexedDelegatingBeans.put(beanName, delegatingBean);
+        }
+        parentContext.refresh();   // seems to be required sometimes
+
+        return parentContext;
+    }
+
+    private String determineBeanName(FieldInfo field) {
+        SpringMock springMockAnnotation = field.getReflection().getAnnotation(SpringMock.class);
+        String beanName = springMockAnnotation.value();
+
+        if ("".equals(beanName)) {
+            beanName = field.getName();
+        }
+
+        return beanName;
+    }
+
+    private Object createDelegatingBean(FieldInfo springMockField) {
+        return null;  //To change body of created methods use File | Settings | File Templates.
+    }
 
   @Override
   public void interceptSetupMethod(IMethodInvocation invocation) throws Throwable {
@@ -54,7 +105,7 @@ public class SpringInterceptor extends AbstractMethodInterceptor {
       return;
     }
     beforeTestMethodInvoked = false;
-    
+
     Throwable cleanupEx = null;
     try {
       invocation.proceed();
@@ -70,7 +121,7 @@ public class SpringInterceptor extends AbstractMethodInterceptor {
     } catch (Throwable t) {
       afterTestMethodEx = t;
     }
-    
+
     if (cleanupEx != null) throw cleanupEx;
     if (afterTestMethodEx != null) throw afterTestMethodEx;
   }

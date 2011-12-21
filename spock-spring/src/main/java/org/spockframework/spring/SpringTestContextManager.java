@@ -16,9 +16,12 @@ package org.spockframework.spring;
 
 import java.lang.reflect.Method;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.test.context.TestContext;
 import org.springframework.test.context.TestContextManager;
 
 import org.spockframework.util.ReflectionUtil;
+import org.springframework.test.context.support.AbstractTestExecutionListener;
 
 /**
  * Wrapper around Spring's TestContextManager class that works with Spring 2.5 and Spring 3.
@@ -34,6 +37,35 @@ public class SpringTestContextManager {
   public SpringTestContextManager(Class<?> testClass) {
     delegate = new TestContextManager(testClass);
   }
+
+    public void registerParentApplicationContext(final ApplicationContext parentApplicationContext) {
+        delegate.registerTestExecutionListeners(new AbstractTestExecutionListener() {
+            @Override
+            public void beforeTestClass(TestContext testContext) throws Exception {
+                super.beforeTestClass(testContext);    //To change body of overridden methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void prepareTestInstance(TestContext testContext) throws Exception {
+                super.prepareTestInstance(testContext);    //To change body of overridden methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void beforeTestMethod(TestContext testContext) throws Exception {
+                super.beforeTestMethod(testContext);    //To change body of overridden methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void afterTestMethod(TestContext testContext) throws Exception {
+                super.afterTestMethod(testContext);    //To change body of overridden methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void afterTestClass(TestContext testContext) throws Exception {
+                super.afterTestClass(testContext);    //To change body of overridden methods use File | Settings | File Templates.
+            }
+        });
+    }
 
   public void beforeTestClass() throws Exception {
     if (beforeTestClassMethod != null)
