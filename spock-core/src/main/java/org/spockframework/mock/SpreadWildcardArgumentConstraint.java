@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package org.spockframework.tapestry;
+package org.spockframework.mock;
 
-import org.apache.tapestry5.ioc.internal.services.PerThreadServiceLifecycle;
-import org.apache.tapestry5.ioc.services.ClassFactory;
+import org.spockframework.lang.SpreadWildcard;
+import org.spockframework.runtime.InvalidSpecException;
 
 /**
- * Allows a service to exist per feature iteration. Implementation is fully
- * based on Tapestry's (internal) <tt>PerThreadServiceLifecycle</tt>.
  *
  * @author Peter Niederwieser
  */
-public class PerIterationServiceLifecycle extends PerThreadServiceLifecycle {
-  public PerIterationServiceLifecycle(IPerIterationManager perIterationManager, ClassFactory classFactory) {
-    super(perIterationManager, classFactory);
+public class SpreadWildcardArgumentConstraint implements IArgumentConstraint {
+  public static final SpreadWildcardArgumentConstraint INSTANCE = new SpreadWildcardArgumentConstraint();
+
+  private SpreadWildcardArgumentConstraint() {}
+
+  public boolean isSatisfiedBy(Object arg) {
+    throw new InvalidSpecException("*_ may only appear at the end of an argument list");
   }
 }

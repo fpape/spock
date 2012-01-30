@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package org.spockframework.tapestry;
+package org.spockframework.util;
 
-import org.apache.tapestry5.ioc.internal.services.PerthreadManagerImpl;
-import org.slf4j.Logger;
+public class Jvm {
+  private static final Jvm INSTANCE = new Jvm();
 
-/**
- * Implementation of <tt>IPerIterationManager</tt> which is fully based on
- * Tapestry's (internal) <tt>PerthreadManagerImpl</tt>.
- *
- * @author Peter Niederwiesers
- */
-public class PerIterationManager extends PerthreadManagerImpl implements IPerIterationManager {
-  public PerIterationManager(Logger logger) {
-    super(logger);
+  private Jvm() {}
+
+  public static Jvm getCurrent() {
+    return INSTANCE;
+  }
+  
+  public boolean isIbmJvm() {
+    return System.getProperty("java.vendor").toLowerCase().contains("ibm");
   }
 }

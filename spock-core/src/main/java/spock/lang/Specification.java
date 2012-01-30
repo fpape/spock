@@ -18,6 +18,7 @@ package spock.lang;
 
 import org.junit.runner.RunWith;
 
+import org.spockframework.lang.Wildcard;
 import org.spockframework.mock.MockController;
 import org.spockframework.runtime.*;
 import org.spockframework.util.GroovyRuntimeUtil;
@@ -44,7 +45,7 @@ public abstract class Specification {
    * Example: <tt>[foo, _] &lt;&lt; loadDataFromDb()</tt>
    * </ul>
    */
-  public static final Object _ = new Wildcard();
+  public static final Object _ = Wildcard.INSTANCE;
 
   /**
    * Specifies that the preceding <tt>when</tt> block should throw an exception.
@@ -201,7 +202,7 @@ public abstract class Specification {
    * @param block a block of code containing one or more interaction definitions
    */
   public void interaction(Closure block) {
-    GroovyRuntimeUtil.callClosure(block);
+    GroovyRuntimeUtil.invokeClosure(block);
   }
 
   /**
@@ -249,13 +250,5 @@ public abstract class Specification {
   @SuppressWarnings("UnusedDeclaration")
   <T> T old(T expression, boolean dummy) {
     return expression;
-  }
-
-  // non-anonymous class to facilitate debugging
-  private static class Wildcard {
-    @Override
-    public String toString() {
-      return "_"; // both compiler and runtime sometimes need String representation
-    }
   }
 }
